@@ -1,24 +1,48 @@
 import path from "path";
-import fs from "fs";
+import fs from "fs-extra";
 import * as vscode from "vscode";
 import nunjucks from "nunjucks";
 import localize from "./localize";
 
+// 目录
+// 工作空间目录
 let workSpaceFolder = "";
+// 模板目录
 let templateRootFolder = "";
+// 输出目录
 let productFolder = "";
 
+// 参数列表
+// 全部参数
+let paramsObject: any = {};
+// 全局参数
+let globalParams = {};
+// 文件夹参数列表
+let folderParamsList: any[] = [];
+
+// 回调
+let callback = {};
+
+/**
+ * 获取当前工作空间目录
+ */
 function getWorkSpaceFolder(currentUri: vscode.Uri) {
   const selectedWorkspaceFolder =
     vscode.workspace.getWorkspaceFolder(currentUri);
   return selectedWorkspaceFolder ? selectedWorkspaceFolder.uri.fsPath : "";
 }
 
+/**
+ * 通过链接获取schemeUrl
+ */
 function getSchemeUrl(url: string) {
   const currentUri = vscode.Uri.file(url);
   return currentUri.scheme + "://" + currentUri.authority + currentUri.path;
 }
 
+/**
+ * 选择模板
+ */
 async function selectTemplate() {
   const templateFiles = fs.readdirSync(templateRootFolder);
   const templateList = templateFiles
@@ -40,15 +64,6 @@ async function selectTemplate() {
   } catch (error) {}
   return templateData;
 }
-
-// 参数列表
-let paramsObject: any = {};
-let globalParams = {};
-
-let folderParamsList: any[] = [];
-
-// 回调
-let callback = {};
 
 /**
  * 参数列表格式化成对象
@@ -81,7 +96,7 @@ function getReplaceValue(pathName: string) {
  * @param {Object} context 模板参数
  * @returns {String} 渲染内容
  */
-function render(filePath: string, context: any) {
+function render(filePath: string, context: any): string {
   const file = fs.readFileSync(filePath, { encoding: "utf-8" });
   return nunjucks.renderString(file, context);
 }
@@ -91,11 +106,11 @@ function render(filePath: string, context: any) {
  * @param {String} templateDir 模板文件夹路径
  * @param {String} outDir 输出路径
  */
-function productCode(templateDir: string, outDir: string) {
+async function productCode(templateDir: string, outDir: string) {
   console.log("outDir:", outDir);
   // 遍历模板目录下的文件
   let files = fs.readdirSync(templateDir);
-  files.map(function (file) {
+  for (const file of files) {
     // 模板文件路径
     const templatePath = path.join(templateDir, file);
     // 拿到文件信息对象
@@ -104,6 +119,16 @@ function productCode(templateDir: string, outDir: string) {
     const newFilePath = path.join(outDir, getReplaceValue(path.basename(file)));
     // 判断是否为文件夹类型
     if (stats.isDirectory()) {
+      // 判断文件夹是否已存在
+      if (fs.pathExistsSync(newFilePath)) {
+        const answer = await vscode.window.showWarningMessage(
+          "文件夹已存在，是否覆盖？",
+          "确认",
+          "取消"
+        );
+        console.log(answer);
+        return;
+      }
       // 创建文件夹
       fs.mkdirSync(newFilePath);
       try {
@@ -123,7 +148,7 @@ function productCode(templateDir: string, outDir: string) {
         console.log(error);
       }
     }
-  });
+  }
 }
 
 async function createFile(templateName: string, paramsPath?: string) {
@@ -182,6 +207,9 @@ async function createFile(templateName: string, paramsPath?: string) {
   productCode(path.join(templateRootFolder, `${templateName}`), productFolder);
 }
 
+/**
+ * 创建文件
+ */
 export async function newFile(args: vscode.Uri) {
   console.log("args:", args);
   // 初始化变量
