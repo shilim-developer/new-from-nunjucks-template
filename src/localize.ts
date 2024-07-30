@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "fs-extra";
 import { resolve } from "path";
 import { extensions } from "vscode";
+import Lang from "../package.nls.json";
 
 interface ILanguagePack {
   [key: string]: string;
@@ -10,7 +11,7 @@ export class Localize {
   private bundle = this.resolveLanguagePack();
   private options: { locale: string } = { locale: "" };
 
-  public localize(key: string, ...args: string[]): string {
+  public localize(key: keyof typeof Lang, ...args: string[]): string {
     const message = this.bundle[key] || key;
     return this.format(message, args);
   }

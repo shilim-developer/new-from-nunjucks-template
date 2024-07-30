@@ -3,6 +3,12 @@ import fs from "fs-extra";
 import * as vscode from "vscode";
 import nunjucks from "nunjucks";
 import localize from "./localize";
+import { jsRequire } from "./require";
+
+interface CallBack {
+  newFolder?: (path: string, params: any) => void;
+  newFile?: (path: string, params: any) => void;
+}
 
 // 目录
 // 工作空间目录
@@ -21,7 +27,8 @@ let globalParams = {};
 let folderParamsList: any[] = [];
 
 // 回调
-let callback = {};
+let callback: CallBack = {};
+let globalCallback: CallBack = {};
 
 /**
  * 获取当前工作空间目录
@@ -33,11 +40,10 @@ function getWorkSpaceFolder(currentUri: vscode.Uri) {
 }
 
 /**
- * 通过链接获取schemeUrl
+ * 获取要替换的参数字符串
  */
-function getSchemeUrl(url: string) {
-  const currentUri = vscode.Uri.file(url);
-  return currentUri.scheme + "://" + currentUri.authority + currentUri.path;
+function getReplaceParamStr(params: string | { value: string }) {
+  return typeof params === "string" ? params : params.value;
 }
 
 /**
@@ -49,18 +55,14 @@ async function selectTemplate() {
     .filter((file) => {
       return !path.extname(`file${file}`);
     })
-    .map((file) => ({
-      title: file,
-      value: file,
-    }));
+    .map((file) => {
+      return {
+        label: file,
+      };
+    });
   let templateData;
   try {
-    templateData = await vscode.window.showQuickPick(
-      templateList.map((template) => ({
-        label: template.title,
-        description: template.value,
-      }))
-    );
+    templateData = await vscode.window.showQuickPick(templateList);
   } catch (error) {}
   return templateData;
 }
@@ -69,7 +71,10 @@ async function selectTemplate() {
  * 参数列表格式化成对象
  */
 function initParamsObj(params: any) {
-  return params.reduce((pre: any, cur: any) => ((pre[cur] = ""), pre), {});
+  return params.reduce(
+    (pre: any, cur: any) => ((pre[getReplaceParamStr(cur)] = ""), pre),
+    {}
+  );
 }
 
 /**
@@ -79,7 +84,8 @@ function initParamsObj(params: any) {
  */
 function getReplaceValue(pathName: string) {
   let newPathName = pathName;
-  for (const key of folderParamsList) {
+  for (const folderParams of folderParamsList) {
+    const key = getReplaceParamStr(folderParams);
     if (pathName.indexOf(key) >= 0) {
       newPathName = newPathName.replace(
         new RegExp(`${key}`, "g"),
@@ -117,22 +123,26 @@ async function productCode(templateDir: string, outDir: string) {
     const stats = fs.statSync(templatePath);
     // 输出文件路径
     const newFilePath = path.join(outDir, getReplaceValue(path.basename(file)));
+    console.log("newFilePath:", newFilePath);
     // 判断是否为文件夹类型
     if (stats.isDirectory()) {
       // 判断文件夹是否已存在
       if (fs.pathExistsSync(newFilePath)) {
         const answer = await vscode.window.showWarningMessage(
-          "文件夹已存在，是否覆盖？",
-          "确认",
-          "取消"
+          localize("ext.config.folderExists"),
+          localize("ext.config.confirm"),
+          localize("ext.config.cancel")
         );
-        console.log(answer);
-        return;
+        if (answer === localize("ext.config.cancel")) {
+          return;
+        }
       }
       // 创建文件夹
-      fs.mkdirSync(newFilePath);
+      fs.emptyDirSync(newFilePath);
       try {
-        // callback.newFolder && callback.newFolder(newFilePath, paramsObject);
+        callback.newFolder && callback.newFolder(newFilePath, paramsObject);
+        globalCallback.newFolder &&
+          globalCallback.newFolder(newFilePath, paramsObject);
       } catch (error) {
         console.log(error);
       }
@@ -143,7 +153,9 @@ async function productCode(templateDir: string, outDir: string) {
       const content = render(templatePath, paramsObject);
       fs.writeFileSync(newFilePath, content);
       try {
-        // callback.newFile && callback.newFile(newFilePath, paramsObject);
+        callback.newFile && callback.newFile(newFilePath, paramsObject);
+        globalCallback.newFile &&
+          globalCallback.newFile(newFilePath, paramsObject);
       } catch (error) {
         console.log(error);
       }
@@ -154,13 +166,18 @@ async function productCode(templateDir: string, outDir: string) {
 async function createFile(templateName: string, paramsPath?: string) {
   // 读取公共参数配置
   try {
-    globalParams = require(path.join(templateRootFolder, "/params.js"))();
+    globalParams = jsRequire(path.join(templateRootFolder, "/params.js"))();
   } catch (error) {}
   try {
-    callback = require(path.join(templateRootFolder, "/callback.js"));
+    globalCallback = jsRequire(path.join(templateRootFolder, "/callback.js"));
   } catch (error) {}
-  const { fileParams, templateParams } = await import(
-    getSchemeUrl(path.join(templateRootFolder, `${templateName}/@@config.js`))
+  try {
+    callback = jsRequire(
+      path.join(templateRootFolder, `${templateName}/@@callback.js`)
+    );
+  } catch (error) {}
+  const { fileParams, templateParams } = jsRequire(
+    path.join(templateRootFolder, `${templateName}/@@config.js`)
   );
 
   // 是否已经给出参数路径
@@ -183,28 +200,40 @@ async function createFile(templateName: string, paramsPath?: string) {
         globalParams
       );
     } catch (error) {
-      console.log(`✖ please check the correctness of the path!`);
+      vscode.window.showErrorMessage(localize("ext.config.pathError"));
       return;
     }
   } else {
     paramsObject = Object.assign({}, initParamsObj(paramsList), globalParams);
-    console.log("paramsObject:", paramsObject);
     const keyAnswerObject: { [key: string]: string } = {};
     for (const key of paramsList) {
+      let prompt = "";
+      let placeHolder = "";
+      if (typeof key === "string") {
+        placeHolder = key;
+        prompt = key;
+      } else {
+        placeHolder = key.value;
+        prompt = key.description;
+      }
       const answer = await vscode.window.showInputBox({
-        prompt: `${localize("ext.config.input")} ${key}`,
+        prompt: `${localize("ext.config.input")}${prompt}`,
         value: "",
-        placeHolder: `${localize("ext.config.input")} ${key}`,
+        placeHolder: `${localize("ext.config.input")}${placeHolder}`,
         ignoreFocusOut: true,
       });
       if (!answer) {
         return;
       }
-      keyAnswerObject[key] = answer;
+      keyAnswerObject[placeHolder] = answer;
     }
     paramsObject = { ...paramsObject, ...keyAnswerObject };
+    console.log("paramsObject:", paramsObject);
   }
-  productCode(path.join(templateRootFolder, `${templateName}`), productFolder);
+  await productCode(
+    path.join(templateRootFolder, `${templateName}`),
+    productFolder
+  );
 }
 
 /**

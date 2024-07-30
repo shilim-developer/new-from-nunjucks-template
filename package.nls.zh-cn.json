@@ -1,5 +1,8 @@
 {
+    "ext.config.contextMenu": "从Nunjucks模板新建文件",
     "ext.config.input": "请输入",
-    "ext.config.gist": "GitHub GIST ID for Settings Sync.",
-    "ext.config.lastUpload": "Settings Sync last upload date. Set it as empty if you want to manually hit download."
+    "ext.config.pathError": "请检查模板路径是否正确",
+    "ext.config.folderExists": "文件夹已存在，是否覆盖？",
+    "ext.config.confirm": "确定",
+    "ext.config.cancel": "取消"
 }
