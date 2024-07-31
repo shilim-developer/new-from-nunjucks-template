@@ -1,6 +1,6 @@
 {
   "name": "new-from-nunjucks-template",
-  "displayName": "new-from-nunjucks-template",
+  "displayName": "New From Nunjucks Template",
   "description": "Creates a new file/folder structure from nunjucks template",
   "version": "0.0.1",
   "engines": {
@@ -28,6 +28,16 @@
           "group": "navigation"
         }
       ]
+    },
+    "configuration": {
+      "title": "New From Nunjucks Template",
+      "properties": {
+        "NewFromNunjucksTemplate.templateUrl": {
+          "type": "string",
+          "default": ".templates",
+          "description": "%ext.config.configTpUrlDes%"
+        }
+      }
     }
   },
   "scripts": {

@@ -2,7 +2,9 @@
     "ext.config.contextMenu": "Create File by Nunjucks Template",
     "ext.config.input": "Please Input",
     "ext.config.pathError": "Please check the correctness of the path!",
-    "ext.config.folderExists": "The folder already exists, do you want to overwrite it?",
+    "ext.config.folderExists": "The folder '${folderName}' already exists, do you want to overwrite it?",
+    "ext.config.fileExists": "The file '${fileName}' already exists, do you want to overwrite it?",
     "ext.config.confirm": "Yes",
-    "ext.config.cancel": "Cancel"
+    "ext.config.cancel": "Cancel",
+    "ext.config.configTpUrlDes": "nunjucks template url"
 }

@@ -1,47 +1,241 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
-import { Uri, workspace, type WorkspaceFolder, window } from "vscode";
+import { beforeEach, afterEach, describe, expect, test, vi } from "vitest";
+import { Uri, workspace, window } from "vscode";
+import { newFile } from "../new-file";
+import path from "path";
+import { existsSync, mkdirSync, removeSync } from "fs-extra";
+import { readFileSync } from "fs";
+import localize from "../localize";
+import { jsRequire } from "../require";
 
 vi.mock("vscode");
-console.log(Uri);
 
-const testFileUri = Uri.file(__filename);
-const rootUri = Uri.file(__dirname);
-const workspaceFolder1: WorkspaceFolder = {
-  uri: Uri.joinPath(rootUri, "Folder1"),
-  name: "Folder1",
-  index: 0,
-};
+const rootUri = Uri.file(process.cwd());
+const testUri = Uri.file(path.join(process.cwd(), "test-workspace"));
+const templateGlobalUri = Uri.file(
+  path.join(process.cwd(), ".templates/global.js")
+);
+const globalData = jsRequire(templateGlobalUri.fsPath)();
 
-const workspaceFolder2: WorkspaceFolder = {
-  uri: Uri.joinPath(rootUri, "Folder2"),
-  name: "Folder2",
-  index: 1,
-};
+describe("extension.test", () => {
+  beforeEach(() => {
+    removeSync(testUri.fsPath);
+    mkdirSync(testUri.fsPath);
+  });
 
-describe("vscode.workspace", () => {
   afterEach(() => {
     vi.resetAllMocks();
+    removeSync(testUri.fsPath);
   });
 
+  // test mock api
   test("getWorkspaceFolder", () => {
-    const uri = Uri.joinPath(workspaceFolder1.uri, "code.test.ts");
-    const uri2 = Uri.joinPath(workspaceFolder2.uri, "test.txt");
-
-    const spy = vi.spyOn(workspace, "workspaceFolders", "get");
-    spy.mockReturnValue([workspaceFolder1, workspaceFolder2]);
-
-    expect(workspace.workspaceFolders).toEqual([
-      workspaceFolder1,
-      workspaceFolder2,
-    ]);
-    expect(workspace.getWorkspaceFolder(uri)).toEqual(workspaceFolder1);
-    expect(workspace.getWorkspaceFolder(uri2)).toEqual(workspaceFolder2);
+    expect(workspace.getWorkspaceFolder(rootUri)).toEqual(rootUri);
   });
 
-  test("openTextDocument", async () => {
-    const uri = testFileUri;
-    const doc = await workspace.openTextDocument(uri);
-    expect(doc.uri).toEqual(uri);
-    expect(doc.getText()).toContain("vi.mock('vscode');");
+  test("create file", async () => {
+    const templateName = "template_file";
+    const fileName = "shilim";
+    const fileContent = "content";
+    vi.spyOn(window, "showQuickPick").mockResolvedValue({
+      label: templateName,
+      description: "",
+    });
+    vi.spyOn(window, "showInputBox")
+      .mockResolvedValueOnce(fileName)
+      .mockResolvedValueOnce(fileContent);
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${fileName}.js`))).toEqual(
+      true
+    );
+    expect(
+      existsSync(
+        path.join(testUri.fsPath, `${globalData.prefix}-${fileName}.js`)
+      )
+    ).toEqual(true);
+    expect(
+      readFileSync(path.join(testUri.fsPath, `${fileName}.js`)).toString()
+    ).toEqual(fileContent);
+  });
+
+  test("exits file accept", async () => {
+    const templateName = "template_file";
+    const fileName = "shilim";
+    const fileContent = "content";
+    const fileContent2 = "content2";
+    vi.spyOn(window, "showQuickPick").mockResolvedValue({
+      label: templateName,
+      description: "",
+    });
+    vi.spyOn(window, "showWarningMessage").mockResolvedValue(
+      localize("ext.config.confirm") as any
+    );
+    vi.spyOn(window, "showInputBox")
+      .mockResolvedValueOnce(fileName)
+      .mockResolvedValueOnce(fileContent)
+      .mockResolvedValueOnce(fileName)
+      .mockResolvedValueOnce(fileContent2);
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${fileName}.js`))).toEqual(
+      true
+    );
+    expect(
+      readFileSync(path.join(testUri.fsPath, `${fileName}.js`)).toString()
+    ).toEqual(fileContent);
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${fileName}.js`))).toEqual(
+      true
+    );
+    expect(
+      readFileSync(path.join(testUri.fsPath, `${fileName}.js`)).toString()
+    ).toEqual(fileContent2);
+  });
+
+  test("exits file cancel", async () => {
+    const templateName = "template_file";
+    const fileName = "shilim";
+    const fileContent = "content";
+    const fileContent2 = "content2";
+    vi.spyOn(window, "showQuickPick").mockResolvedValue({
+      label: templateName,
+      description: "",
+    });
+    vi.spyOn(window, "showWarningMessage").mockResolvedValue(
+      localize("ext.config.cancel") as any
+    );
+    vi.spyOn(window, "showInputBox")
+      .mockResolvedValueOnce(fileName)
+      .mockResolvedValueOnce(fileContent)
+      .mockResolvedValueOnce(fileName)
+      .mockResolvedValueOnce(fileContent2);
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${fileName}.js`))).toEqual(
+      true
+    );
+    expect(
+      readFileSync(path.join(testUri.fsPath, `${fileName}.js`)).toString()
+    ).toEqual(fileContent);
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${fileName}.js`))).toEqual(
+      true
+    );
+    expect(
+      readFileSync(path.join(testUri.fsPath, `${fileName}.js`)).toString()
+    ).toEqual(fileContent);
+  });
+
+  test("create folder", async () => {
+    const templateName = "template_folder";
+    const folderName = "shilim";
+    const fileName = "button";
+    vi.spyOn(window, "showQuickPick").mockResolvedValue({
+      label: templateName,
+      description: "",
+    });
+    vi.spyOn(window, "showInputBox")
+      .mockResolvedValueOnce(folderName)
+      .mockResolvedValueOnce(fileName);
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${folderName}`))).toEqual(
+      true
+    );
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.js`))
+    ).toEqual(true);
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.css`))
+    ).toEqual(true);
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.html`))
+    ).toEqual(true);
+  });
+
+  test("exits folder accept", async () => {
+    const templateName = "template_folder";
+    const folderName = "shilim";
+    const fileName = "button";
+    const fileName2 = "button2";
+    vi.spyOn(window, "showQuickPick").mockResolvedValue({
+      label: templateName,
+      description: "",
+    });
+    vi.spyOn(window, "showWarningMessage").mockResolvedValue(
+      localize("ext.config.confirm") as any
+    );
+    vi.spyOn(window, "showInputBox")
+      .mockResolvedValueOnce(folderName)
+      .mockResolvedValueOnce(fileName)
+      .mockResolvedValueOnce(folderName)
+      .mockResolvedValueOnce(fileName2);
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${folderName}`))).toEqual(
+      true
+    );
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.js`))
+    ).toEqual(true);
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.css`))
+    ).toEqual(true);
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.html`))
+    ).toEqual(true);
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${folderName}`))).toEqual(
+      true
+    );
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName2}.js`))
+    ).toEqual(true);
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName2}.css`))
+    ).toEqual(true);
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName2}.html`))
+    ).toEqual(true);
+  });
+
+  test("exits folder cancel", async () => {
+    const templateName = "template_folder";
+    const folderName = "shilim";
+    const fileName = "button";
+    const fileName2 = "button2";
+    vi.spyOn(window, "showQuickPick").mockResolvedValue({
+      label: templateName,
+      description: "",
+    });
+    vi.spyOn(window, "showWarningMessage").mockResolvedValue(
+      localize("ext.config.cancel") as any
+    );
+    vi.spyOn(window, "showInputBox")
+      .mockResolvedValueOnce(folderName)
+      .mockResolvedValueOnce(fileName)
+      .mockResolvedValueOnce(folderName)
+      .mockResolvedValueOnce(fileName2);
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${folderName}`))).toEqual(
+      true
+    );
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.js`))
+    ).toEqual(true);
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.css`))
+    ).toEqual(true);
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.html`))
+    ).toEqual(true);
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${folderName}`))).toEqual(
+      true
+    );
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.js`))
+    ).toEqual(true);
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.css`))
+    ).toEqual(true);
+    expect(
+      existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.html`))
+    ).toEqual(true);
   });
 });

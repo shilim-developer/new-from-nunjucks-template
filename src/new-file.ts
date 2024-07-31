@@ -4,12 +4,14 @@ import * as vscode from "vscode";
 import nunjucks from "nunjucks";
 import localize from "./localize";
 import { jsRequire } from "./require";
+import { Configuration } from "./configuration";
 
 interface CallBack {
   newFolder?: (path: string, params: any) => void;
   newFile?: (path: string, params: any) => void;
 }
 
+let configuration: Configuration;
 // 目录
 // 工作空间目录
 let workSpaceFolder = "";
@@ -121,15 +123,20 @@ async function productCode(templateDir: string, outDir: string) {
     const templatePath = path.join(templateDir, file);
     // 拿到文件信息对象
     const stats = fs.statSync(templatePath);
+    // 新文件名
+    const newFileName = getReplaceValue(path.basename(file));
     // 输出文件路径
-    const newFilePath = path.join(outDir, getReplaceValue(path.basename(file)));
+    const newFilePath = path.join(outDir, newFileName);
     console.log("newFilePath:", newFilePath);
     // 判断是否为文件夹类型
     if (stats.isDirectory()) {
       // 判断文件夹是否已存在
       if (fs.pathExistsSync(newFilePath)) {
         const answer = await vscode.window.showWarningMessage(
-          localize("ext.config.folderExists"),
+          localize("ext.config.folderExists").replace(
+            "${folderName}",
+            newFileName
+          ),
           localize("ext.config.confirm"),
           localize("ext.config.cancel")
         );
@@ -148,6 +155,17 @@ async function productCode(templateDir: string, outDir: string) {
       }
       return productCode(templatePath, newFilePath); // 递归读取文件夹
     } else if (!["@@config.js", "@@params.js"].includes(path.basename(file))) {
+      // 判断文件是否已存在
+      if (fs.pathExistsSync(newFilePath)) {
+        const answer = await vscode.window.showWarningMessage(
+          localize("ext.config.fileExists").replace("${fileName}", newFileName),
+          localize("ext.config.confirm"),
+          localize("ext.config.cancel")
+        );
+        if (answer === localize("ext.config.cancel")) {
+          return;
+        }
+      }
       // 过滤配置文件
       // 创建文件
       const content = render(templatePath, paramsObject);
@@ -166,7 +184,7 @@ async function productCode(templateDir: string, outDir: string) {
 async function createFile(templateName: string, paramsPath?: string) {
   // 读取公共参数配置
   try {
-    globalParams = jsRequire(path.join(templateRootFolder, "/params.js"))();
+    globalParams = jsRequire(path.join(templateRootFolder, "/global.js"))();
   } catch (error) {}
   try {
     globalCallback = jsRequire(path.join(templateRootFolder, "/callback.js"));
@@ -241,16 +259,17 @@ async function createFile(templateName: string, paramsPath?: string) {
  */
 export async function newFile(args: vscode.Uri) {
   console.log("args:", args);
+  configuration = new Configuration();
   // 初始化变量
   workSpaceFolder = getWorkSpaceFolder(args);
   console.log("workSpaceFolder:", args.toString());
-  templateRootFolder = path.join(workSpaceFolder, ".templates");
+  templateRootFolder = path.join(workSpaceFolder, configuration.templateUrl);
   const stats = fs.statSync(args.fsPath);
   productFolder = stats.isDirectory() ? args.fsPath : path.dirname(args.fsPath);
   console.log("productFolder:", productFolder);
   // 选择模板
   const templateData = await selectTemplate();
   if (templateData) {
-    createFile(templateData.label);
+    await createFile(templateData.label);
   }
 }

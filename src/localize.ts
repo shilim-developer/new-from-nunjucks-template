@@ -8,8 +8,8 @@ interface ILanguagePack {
 }
 
 export class Localize {
-  private bundle = this.resolveLanguagePack();
   private options: { locale: string } = { locale: "" };
+  private bundle = this.resolveLanguagePack();
 
   public localize(key: keyof typeof Lang, ...args: string[]): string {
     const message = this.bundle[key] || key;
