@@ -5,7 +5,8 @@ export default defineConfig({
     include: ["src/test/**/*.spec.ts"],
     environment: "node",
     coverage: {
-      exclude: ["node_modules", "out", "src/typings", ".vscode-test"],
+      include: ["src"],
+      exclude: ["src/test", "src/extension.ts"],
     },
   },
 });

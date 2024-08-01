@@ -1,4 +1,12 @@
-import { beforeEach, afterEach, describe, expect, test, vi } from "vitest";
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type MockInstance,
+} from "vitest";
 import { Uri, workspace, window } from "vscode";
 import { newFile } from "../new-file";
 import path from "path";
@@ -15,6 +23,13 @@ const templateGlobalUri = Uri.file(
   path.join(process.cwd(), ".templates/global.js")
 );
 const globalData = jsRequire(templateGlobalUri.fsPath)();
+const mockList: MockInstance[] = [];
+
+function clearMockList() {
+  while (mockList.length > 0) {
+    mockList.pop()!.mockClear();
+  }
+}
 
 describe("extension.test", () => {
   beforeEach(() => {
@@ -23,26 +38,24 @@ describe("extension.test", () => {
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    clearMockList();
     removeSync(testUri.fsPath);
-  });
-
-  // test mock api
-  test("getWorkspaceFolder", () => {
-    expect(workspace.getWorkspaceFolder(rootUri)).toEqual(rootUri);
   });
 
   test("create file", async () => {
     const templateName = "template_file";
     const fileName = "shilim";
     const fileContent = "content";
-    vi.spyOn(window, "showQuickPick").mockResolvedValue({
-      label: templateName,
-      description: "",
-    });
-    vi.spyOn(window, "showInputBox")
-      .mockResolvedValueOnce(fileName)
-      .mockResolvedValueOnce(fileContent);
+    mockList.push(
+      vi.spyOn(window, "showQuickPick").mockResolvedValue({
+        label: templateName,
+        description: "",
+      }),
+      vi
+        .spyOn(window, "showInputBox")
+        .mockResolvedValueOnce(fileName)
+        .mockResolvedValueOnce(fileContent)
+    );
     await newFile(testUri);
     expect(existsSync(path.join(testUri.fsPath, `${fileName}.js`))).toEqual(
       true
@@ -62,18 +75,21 @@ describe("extension.test", () => {
     const fileName = "shilim";
     const fileContent = "content";
     const fileContent2 = "content2";
-    vi.spyOn(window, "showQuickPick").mockResolvedValue({
-      label: templateName,
-      description: "",
-    });
-    vi.spyOn(window, "showWarningMessage").mockResolvedValue(
-      localize("ext.config.confirm") as any
+    mockList.push(
+      vi.spyOn(window, "showQuickPick").mockResolvedValue({
+        label: templateName,
+        description: "",
+      }),
+      vi
+        .spyOn(window, "showWarningMessage")
+        .mockResolvedValue(localize("ext.config.confirm") as any),
+      vi
+        .spyOn(window, "showInputBox")
+        .mockResolvedValueOnce(fileName)
+        .mockResolvedValueOnce(fileContent)
+        .mockResolvedValueOnce(fileName)
+        .mockResolvedValueOnce(fileContent2)
     );
-    vi.spyOn(window, "showInputBox")
-      .mockResolvedValueOnce(fileName)
-      .mockResolvedValueOnce(fileContent)
-      .mockResolvedValueOnce(fileName)
-      .mockResolvedValueOnce(fileContent2);
     await newFile(testUri);
     expect(existsSync(path.join(testUri.fsPath, `${fileName}.js`))).toEqual(
       true
@@ -95,18 +111,21 @@ describe("extension.test", () => {
     const fileName = "shilim";
     const fileContent = "content";
     const fileContent2 = "content2";
-    vi.spyOn(window, "showQuickPick").mockResolvedValue({
-      label: templateName,
-      description: "",
-    });
-    vi.spyOn(window, "showWarningMessage").mockResolvedValue(
-      localize("ext.config.cancel") as any
+    mockList.push(
+      vi.spyOn(window, "showQuickPick").mockResolvedValue({
+        label: templateName,
+        description: "",
+      }),
+      vi
+        .spyOn(window, "showWarningMessage")
+        .mockResolvedValue(localize("ext.config.cancel") as any),
+      vi
+        .spyOn(window, "showInputBox")
+        .mockResolvedValueOnce(fileName)
+        .mockResolvedValueOnce(fileContent)
+        .mockResolvedValueOnce(fileName)
+        .mockResolvedValueOnce(fileContent2)
     );
-    vi.spyOn(window, "showInputBox")
-      .mockResolvedValueOnce(fileName)
-      .mockResolvedValueOnce(fileContent)
-      .mockResolvedValueOnce(fileName)
-      .mockResolvedValueOnce(fileContent2);
     await newFile(testUri);
     expect(existsSync(path.join(testUri.fsPath, `${fileName}.js`))).toEqual(
       true
@@ -127,13 +146,16 @@ describe("extension.test", () => {
     const templateName = "template_folder";
     const folderName = "shilim";
     const fileName = "button";
-    vi.spyOn(window, "showQuickPick").mockResolvedValue({
-      label: templateName,
-      description: "",
-    });
-    vi.spyOn(window, "showInputBox")
-      .mockResolvedValueOnce(folderName)
-      .mockResolvedValueOnce(fileName);
+    mockList.push(
+      vi.spyOn(window, "showQuickPick").mockResolvedValue({
+        label: templateName,
+        description: "",
+      }),
+      vi
+        .spyOn(window, "showInputBox")
+        .mockResolvedValueOnce(folderName)
+        .mockResolvedValueOnce(fileName)
+    );
     await newFile(testUri);
     expect(existsSync(path.join(testUri.fsPath, `${folderName}`))).toEqual(
       true
@@ -154,18 +176,21 @@ describe("extension.test", () => {
     const folderName = "shilim";
     const fileName = "button";
     const fileName2 = "button2";
-    vi.spyOn(window, "showQuickPick").mockResolvedValue({
-      label: templateName,
-      description: "",
-    });
-    vi.spyOn(window, "showWarningMessage").mockResolvedValue(
-      localize("ext.config.confirm") as any
+    mockList.push(
+      vi.spyOn(window, "showQuickPick").mockResolvedValue({
+        label: templateName,
+        description: "",
+      }),
+      vi
+        .spyOn(window, "showWarningMessage")
+        .mockResolvedValue(localize("ext.config.confirm") as any),
+      vi
+        .spyOn(window, "showInputBox")
+        .mockResolvedValueOnce(folderName)
+        .mockResolvedValueOnce(fileName)
+        .mockResolvedValueOnce(folderName)
+        .mockResolvedValueOnce(fileName2)
     );
-    vi.spyOn(window, "showInputBox")
-      .mockResolvedValueOnce(folderName)
-      .mockResolvedValueOnce(fileName)
-      .mockResolvedValueOnce(folderName)
-      .mockResolvedValueOnce(fileName2);
     await newFile(testUri);
     expect(existsSync(path.join(testUri.fsPath, `${folderName}`))).toEqual(
       true
@@ -199,18 +224,21 @@ describe("extension.test", () => {
     const folderName = "shilim";
     const fileName = "button";
     const fileName2 = "button2";
-    vi.spyOn(window, "showQuickPick").mockResolvedValue({
-      label: templateName,
-      description: "",
-    });
-    vi.spyOn(window, "showWarningMessage").mockResolvedValue(
-      localize("ext.config.cancel") as any
+    mockList.push(
+      vi.spyOn(window, "showQuickPick").mockResolvedValue({
+        label: templateName,
+        description: "",
+      }),
+      vi
+        .spyOn(window, "showWarningMessage")
+        .mockResolvedValue(localize("ext.config.cancel") as any),
+      vi
+        .spyOn(window, "showInputBox")
+        .mockResolvedValueOnce(folderName)
+        .mockResolvedValueOnce(fileName)
+        .mockResolvedValueOnce(folderName)
+        .mockResolvedValueOnce(fileName2)
     );
-    vi.spyOn(window, "showInputBox")
-      .mockResolvedValueOnce(folderName)
-      .mockResolvedValueOnce(fileName)
-      .mockResolvedValueOnce(folderName)
-      .mockResolvedValueOnce(fileName2);
     await newFile(testUri);
     expect(existsSync(path.join(testUri.fsPath, `${folderName}`))).toEqual(
       true

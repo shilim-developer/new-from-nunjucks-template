@@ -258,7 +258,7 @@ async function createFile(templateName: string, paramsPath?: string) {
  * 创建文件
  */
 export async function newFile(args: vscode.Uri) {
-  console.log("args:", args);
+  // console.log("args:", args);
   configuration = new Configuration();
   // 初始化变量
   workSpaceFolder = getWorkSpaceFolder(args);
