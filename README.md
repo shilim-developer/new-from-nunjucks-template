@@ -1,11 +1,11 @@
 <h1 align="center">New From Nunjucks Template</h1>
 
 <p align="center">
-  <a style="text-decoration:none" href="https://github.com/shilim-developer/template-new-cli/blob/master">
-    <img alt="version" src="https://img.shields.io/github/package-json/v/shilim-developer/template-new-cli"/>
+  <a style="text-decoration:none" href="https://github.com/shilim-developer/new-from-nunjucks-template/blob/master">
+    <img alt="version" src="https://img.shields.io/github/package-json/v/shilim-developer/new-from-nunjucks-template"/>
   </a>
-  <a style="text-decoration:none" href="https://github.com/shilim-developer/template-new-cli/blob/master/LICENSE">
-    <img alt="LICENSE" src="https://img.shields.io/github/license/shilim-developer/template-new-cli"/>
+  <a style="text-decoration:none" href="https://github.com/shilim-developer/new-from-nunjucks-template/blob/master/LICENSE">
+    <img alt="LICENSE" src="https://img.shields.io/github/license/shilim-developer/new-from-nunjucks-template"/>
   </a>
   <a style="text-decoration:none" href='https://coveralls.io/github/shilim-developer/new-from-nunjucks-template?branch=master'><img src='https://coveralls.io/repos/github/shilim-developer/new-from-nunjucks-template/badge.svg?branch=master' alt='Coverage Status' /></a>
 </p>
