@@ -9,6 +9,7 @@ import { Configuration } from "./configuration";
 interface CallBack {
   newFolder?: (path: string, params: any) => void;
   newFile?: (path: string, params: any) => void;
+  finish?: () => void;
 }
 
 let configuration: Configuration;
@@ -252,6 +253,7 @@ async function createFile(templateName: string, paramsPath?: string) {
     path.join(templateRootFolder, `${templateName}`),
     productFolder
   );
+  globalCallback.finish && globalCallback.finish();
 }
 
 /**

@@ -7,7 +7,7 @@ import {
   vi,
   type MockInstance,
 } from "vitest";
-import { Uri, workspace, window } from "vscode";
+import { Uri, window } from "vscode";
 import { newFile } from "../new-file";
 import path from "path";
 import { existsSync, mkdirSync, removeSync } from "fs-extra";
@@ -17,7 +17,6 @@ import { jsRequire } from "../require";
 
 vi.mock("vscode");
 
-const rootUri = Uri.file(process.cwd());
 const testUri = Uri.file(path.join(process.cwd(), "test-workspace"));
 const templateGlobalUri = Uri.file(
   path.join(process.cwd(), ".templates/global.js")
@@ -33,6 +32,7 @@ function clearMockList() {
 
 describe("extension.test", () => {
   beforeEach(() => {
+    mockList.push(vi.spyOn(console, "log"));
     removeSync(testUri.fsPath);
     mkdirSync(testUri.fsPath);
   });
@@ -68,6 +68,11 @@ describe("extension.test", () => {
     expect(
       readFileSync(path.join(testUri.fsPath, `${fileName}.js`)).toString()
     ).toEqual(fileContent);
+    expect(mockList[0]).toHaveBeenCalledWith(
+      path.join(testUri.fsPath, `${globalData.prefix}-${fileName}.js`)
+    );
+    expect(mockList[0]).toHaveBeenCalledWith("创建文件成功回调");
+    expect(mockList[0]).toHaveBeenCalledWith("finish");
   });
 
   test("exits file accept", async () => {
@@ -169,6 +174,11 @@ describe("extension.test", () => {
     expect(
       existsSync(path.join(testUri.fsPath, `${folderName}/${fileName}.html`))
     ).toEqual(true);
+    expect(mockList[0]).toHaveBeenCalledWith(
+      path.join(testUri.fsPath, `${folderName}`)
+    );
+    expect(mockList[0]).toHaveBeenCalledWith("创建文件夹成功回调");
+    expect(mockList[0]).toHaveBeenCalledWith("finish");
   });
 
   test("exits folder accept", async () => {

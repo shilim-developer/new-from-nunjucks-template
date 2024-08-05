@@ -1,5 +1,7 @@
 # Welcome to your VS Code Extension
 
+[![cov](https://shilim-developer.github.io/new-from-nunjucks-template/badges/coverage.svg)](https://github.com/shilim-developer/new-from-nunjucks-template/actions)
+
 ## What's in the folder
 
 * This folder contains all of the files necessary for your extension.

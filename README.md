@@ -1,71 +1,98 @@
-# new-from-nunjucks-template README
+<h1 align="center">New From Nunjucks Template</h1>
 
+<p align="center">
+  <a style="text-decoration:none" href="https://github.com/shilim-developer/new-from-nunjucks-template/actions">
+    <img alt="version" src="![Codacy coverage](https://img.shields.io/codacy/coverage/shilim-developer/template-new-cli)
+"/>
+  </a>
+  <a style="text-decoration:none" href="https://github.com/shilim-developer/template-new-cli/blob/master">
+    <img alt="version" src="https://img.shields.io/github/package-json/v/shilim-developer/template-new-cli"/>
+  </a>
+  <a style="text-decoration:none" href="https://github.com/shilim-developer/template-new-cli/blob/master/LICENSE">
+    <img alt="LICENSE" src="https://img.shields.io/github/license/shilim-developer/template-new-cli"/>
+  </a>
+</p>
 
+<div align="center">
+<strong>
+<samp>
+
+English | [简体中文](README.zh-Hans.md)
+
+</samp>
+</strong>
+</div>
+
+## Marketplace
+[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=shilim.npm-scripts-auto-node)
+
+## Introductions
+
+Creates a new file/folder structure from nunjucks template
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Generate files through nunjucks templates
+- Support global parameters and local parameters
+- Support creating callbacks before and after
 
-For example if there is an image subfolder under your extension project workspace:
+## Template Preparation
+### Template Directory Structure
 
-\!\[feature X\]\(images/feature-x.png\)
+```
+.templates                          
+├─ template_file         (Template Name) [Single File Template]
+│  └─ @@config.js        (Template Replacement Parameter List Configuration File)
+│  └─ @@params.js        (Template Replacement Parameter Object) [optional]
+│  └─ file_name.js       (Template File)               
+├─ template_folder       (Template Name) [Folder Template]
+│  └─ @@config.js        (Template Parameter List Configuration File)
+│  └─ component_name     (Template Folder)    
+│     └─ file_name.css     
+│     └─ file_name.html 
+│     └─ file_name.js 
+├─ callback.js           (Callback)    
+└─ global.js             (Global Parameter)
+```
+### @@config.js
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+```javascript
+exports.fileParams = ["file_name"];
+exports.templateParams = [];
+```
+### @@params.js
+```javascript
+module.exports = () => {
+  return {
+    fileParams:{
+      file_name: 'helloworld',
+    },
+    templateParams:{
+      content: 'hello',
+    }
+  };
+};
+```
+### Template Language 
+use  [nunjucks](https://github.com/mozilla/nunjucks)
 
-## Requirements
+## Usage
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+### create node.config.json in project root path
+it will auto execute this script before running npm scripts
+```json
+{
+  "script": "nodist 14.21.3"
+}
+```
 
-## Extension Settings
+## ChangeLog
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+[ChangeLog](./CHANGELOG.md)
 
-For example:
+## Preview
+![Preview](./resources/doc1.png)
 
-This extension contributes the following settings:
+## License
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+[License MIT](./LICENSE)

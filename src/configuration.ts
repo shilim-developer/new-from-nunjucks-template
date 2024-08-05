@@ -6,6 +6,6 @@ export class Configuration {
   }
 
   public get templateUrl(): string {
-    return this.customConfig.get<string>("templateUrl") || "";
+    return this.customConfig.get<string>("templateUrl") || ".templates";
   }
 }

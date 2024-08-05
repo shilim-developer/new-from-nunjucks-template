@@ -7,6 +7,7 @@ export default defineConfig({
     coverage: {
       include: ["src"],
       exclude: ["src/test", "src/extension.ts"],
+      reporter: ["lcov", "text", "json-summary"],
     },
   },
 });
