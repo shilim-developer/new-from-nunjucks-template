@@ -63,7 +63,7 @@
     "lint": "eslint src --ext ts",
     "test": "vscode-test",
     "vitest": "vitest run",
-    "coverage": "vitest run --coverage.enabled && coveralls report coverage/lcov.info",
+    "coverage": "vitest run --coverage.enabled",
     "build": "pnpm run package && vsce package --no-yarn"
   },
   "devDependencies": {
