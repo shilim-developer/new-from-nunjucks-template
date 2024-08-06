@@ -9,6 +9,6 @@
   },
   "include": [
     "vite.config.mts",
-    "__mocks__/**/*.cts"
+    "__mocks__/**/*.cts",
   ]
 }

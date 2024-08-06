@@ -1,6 +1,8 @@
 {
-    "ext.config.contextMenu": "Create File by Nunjucks Template",
-    "ext.config.input": "Please Input",
+    "ext.config.contextMenu": "Create File By Nunjucks Template",
+    "ext.config.input": "Please Input ",
+    "ext.config.useParams": "Use Local Params",
+    "ext.config.notUseParams": "Not Use Local Params",
     "ext.config.pathError": "Please check the correctness of the path!",
     "ext.config.folderExists": "The folder '${folderName}' already exists, do you want to overwrite it?",
     "ext.config.fileExists": "The file '${fileName}' already exists, do you want to overwrite it?",

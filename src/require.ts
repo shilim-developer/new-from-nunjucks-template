@@ -6,6 +6,7 @@ const wrapper = [
   "(function (exports, require, module, __dirname, __filename) {\r\n",
   "\r\n})",
 ];
+
 class CustomModule {
   id: string;
   exports: any = {};
@@ -15,11 +16,19 @@ class CustomModule {
       const content = wrapper[0] + script + wrapper[1];
       const fn = vm.runInThisContext(content); // 这里就会返回一个js函数
       const __dirname = path.dirname(module.id);
+      // 保持commonjs require的相对路径
+      const customRequire = (pStr: string) => {
+        try {
+          return require(path.join(__dirname, pStr));
+        } catch (error) {
+          return require(pStr);
+        }
+      };
       // 让函数执行
       fn.call(
         module.exports,
         module.exports,
-        require,
+        customRequire,
         module,
         __dirname,
         module.id
@@ -31,7 +40,7 @@ class CustomModule {
     },
   };
 
-  constructor(id: string) {
+  constructor(id: string, root?: string) {
     this.id = this._resolveFilename(id);
     this.exports = {};
     // 自动加载模块

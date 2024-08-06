@@ -17,6 +17,7 @@ import { jsRequire } from "../require";
 
 vi.mock("vscode");
 
+const templateUri = Uri.file(path.join(process.cwd(), ".templates"));
 const testUri = Uri.file(path.join(process.cwd(), "test-workspace"));
 const templateGlobalUri = Uri.file(
   path.join(process.cwd(), ".templates/global.js")
@@ -47,10 +48,15 @@ describe("extension.test", () => {
     const fileName = "shilim";
     const fileContent = "content";
     mockList.push(
-      vi.spyOn(window, "showQuickPick").mockResolvedValue({
-        label: templateName,
-        description: "",
-      }),
+      vi
+        .spyOn(window, "showQuickPick")
+        .mockResolvedValueOnce({
+          label: templateName,
+          description: "",
+        })
+        .mockResolvedValueOnce({
+          label: localize("ext.config.notUseParams"),
+        }),
       vi
         .spyOn(window, "showInputBox")
         .mockResolvedValueOnce(fileName)
@@ -73,6 +79,41 @@ describe("extension.test", () => {
     );
     expect(mockList[0]).toHaveBeenCalledWith("创建文件成功回调");
     expect(mockList[0]).toHaveBeenCalledWith("finish");
+  });
+
+  test("create file use local params", async () => {
+    const templateName = "template_file";
+    const localParams = jsRequire(
+      path.join(templateUri.fsPath, `${templateName}/@@params.js`)
+    )();
+    const fileName = localParams.fileParams.file_name;
+    const fileContent = localParams.templateParams.content;
+    mockList.push(
+      vi
+        .spyOn(window, "showQuickPick")
+        .mockResolvedValueOnce({
+          label: templateName,
+          description: "",
+        })
+        .mockResolvedValueOnce({
+          label: localize("ext.config.useParams"),
+        })
+    );
+    await newFile(testUri);
+    expect(existsSync(path.join(testUri.fsPath, `${fileName}.js`))).toEqual(
+      true
+    );
+    expect(
+      existsSync(
+        path.join(testUri.fsPath, `${globalData.prefix}-${fileName}.js`)
+      )
+    ).toEqual(true);
+    expect(
+      readFileSync(path.join(testUri.fsPath, `${fileName}.js`)).toString()
+    ).toEqual(fileContent);
+    expect(mockList[0]).toHaveBeenCalledWith(
+      path.join(testUri.fsPath, `${globalData.prefix}-${fileName}.js`)
+    );
   });
 
   test("exits file accept", async () => {

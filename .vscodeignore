@@ -13,3 +13,7 @@ vsc-extension-quickstart.md
 **/*.ts
 **/.vscode-test.*
 test-resources/**
+coverage/**
+__mocks__
+.templates
+.github

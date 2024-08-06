@@ -33,6 +33,8 @@ let folderParamsList: any[] = [];
 let callback: CallBack = {};
 let globalCallback: CallBack = {};
 
+const configJsList = ["@@config.js", "@@params.js", "@@callback.js"];
+
 /**
  * 获取当前工作空间目录
  */
@@ -68,6 +70,33 @@ async function selectTemplate() {
     templateData = await vscode.window.showQuickPick(templateList);
   } catch (error) {}
   return templateData;
+}
+
+/**
+ * 是否使用本地参数
+ * @param {string} templateName 选择的模板
+ */
+async function selectLocalParams(templateName: string) {
+  const localParamsPath = path.join(
+    templateRootFolder,
+    `${templateName}/@@params.js`
+  );
+  const hasLocalParams = fs.existsSync(localParamsPath);
+  let useLocalParams;
+  if (hasLocalParams) {
+    useLocalParams = await vscode.window.showQuickPick([
+      {
+        label: localize("ext.config.useParams"),
+      },
+      {
+        label: localize("ext.config.notUseParams"),
+      },
+    ]);
+  }
+  return useLocalParams &&
+    useLocalParams.label === localize("ext.config.useParams")
+    ? localParamsPath
+    : "";
 }
 
 /**
@@ -155,7 +184,7 @@ async function productCode(templateDir: string, outDir: string) {
         console.log(error);
       }
       return productCode(templatePath, newFilePath); // 递归读取文件夹
-    } else if (!["@@config.js", "@@params.js"].includes(path.basename(file))) {
+    } else if (!configJsList.includes(path.basename(file))) {
       // 判断文件是否已存在
       if (fs.pathExistsSync(newFilePath)) {
         const answer = await vscode.window.showWarningMessage(
@@ -186,10 +215,14 @@ async function createFile(templateName: string, paramsPath?: string) {
   // 读取公共参数配置
   try {
     globalParams = jsRequire(path.join(templateRootFolder, "/global.js"))();
-  } catch (error) {}
+  } catch (error) {
+    console.log("error:", error);
+  }
   try {
     globalCallback = jsRequire(path.join(templateRootFolder, "/callback.js"));
-  } catch (error) {}
+  } catch (error) {
+    console.log("error:", error);
+  }
   try {
     callback = jsRequire(
       path.join(templateRootFolder, `${templateName}/@@callback.js`)
@@ -204,11 +237,8 @@ async function createFile(templateName: string, paramsPath?: string) {
   const globalParamsList = Object.keys(globalParams);
   folderParamsList = fileParams.concat(globalParamsList);
   if (paramsPath) {
-    paramsPath = path.isAbsolute(paramsPath)
-      ? path.resolve(paramsPath)
-      : path.join(process.cwd(), paramsPath);
     try {
-      const outParamsObject = require(paramsPath)();
+      const outParamsObject = jsRequire(paramsPath)();
       folderParamsList = folderParamsList.concat(
         Object.keys(outParamsObject.fileParams)
       );
@@ -219,6 +249,7 @@ async function createFile(templateName: string, paramsPath?: string) {
         globalParams
       );
     } catch (error) {
+      console.log("error:", error);
       vscode.window.showErrorMessage(localize("ext.config.pathError"));
       return;
     }
@@ -264,6 +295,8 @@ export async function newFile(args: vscode.Uri) {
   configuration = new Configuration();
   // 初始化变量
   workSpaceFolder = getWorkSpaceFolder(args);
+  // process.chdir(workSpaceFolder);
+  // console.log(`新的工作目录: ${process.cwd()}`);
   console.log("workSpaceFolder:", args.toString());
   templateRootFolder = path.join(workSpaceFolder, configuration.templateUrl);
   const stats = fs.statSync(args.fsPath);
@@ -272,6 +305,8 @@ export async function newFile(args: vscode.Uri) {
   // 选择模板
   const templateData = await selectTemplate();
   if (templateData) {
-    await createFile(templateData.label);
+    const paramsPath = await selectLocalParams(templateData.label);
+    console.log("paramsPath:", paramsPath);
+    await createFile(templateData.label, paramsPath);
   }
 }

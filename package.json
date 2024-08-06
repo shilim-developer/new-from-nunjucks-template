@@ -50,7 +50,7 @@
   },
   "icon": "resources/icon.png",
   "scripts": {
-    "vscode:prepublish": "pnpm run compile",
+    "vscode:prepublish": "pnpm run package",
     "compile": "pnpm run check-types && pnpm run lint && node esbuild.js",
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
@@ -64,7 +64,7 @@
     "test": "vscode-test",
     "vitest": "vitest run",
     "coverage": "vitest run --coverage.enabled",
-    "build": "pnpm run package && vsce package --no-yarn"
+    "build": "vsce package --no-yarn"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

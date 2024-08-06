@@ -70,25 +70,33 @@ module.exports = () => {
   };
 };
 ```
+### @@callback.js
+```javascript
+exports.newFolder = (path, params) => {
+  console.log(path,params);
+};
+
+exports.newFile = (path) => {
+  console.log(path);
+};
+
+exports.finish = () => {
+  console.log("finish");
+};
+```
 ### Template Language 
 use  [nunjucks](https://github.com/mozilla/nunjucks)
 
 ## Usage
 
-### create node.config.json in project root path
-it will auto execute this script before running npm scripts
-```json
-{
-  "script": "nodist 14.21.3"
-}
-```
+### Example of Creating WeChat Mini Program Code with Templates
+![newTemplate](./resources/docs/newTemplate.gif)
 
+### Example of Creating WeChat Mini Program Code with Templates and Auto registry app.json
+![newTemplateWithCallback](./resources/docs/newTemplateWithCallback.gif)
 ## ChangeLog
 
 [ChangeLog](./CHANGELOG.md)
-
-## Preview
-![Preview](./resources/doc1.png)
 
 ## License
 
