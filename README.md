@@ -20,8 +20,24 @@ English | [简体中文](README.zh-Hans.md)
 </strong>
 </div>
 
+## Table of Contents
+
+<details>
+  <summary>Click me to Open/Close the directory listing</summary>
+
+- [Marketplace](#marketplace)
+- [Introductions](#introductions)
+- [Features](#features)
+- [Template Preparation](#template-preparation)
+- [Usage](#usage)
+- [Recommend](#recommend)
+- [ChangeLog](#changelog)
+- [License](#license)
+
+</details>
+
 ## Marketplace
-[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=shilim.npm-scripts-auto-node)
+[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=shilim.new-from-nunjucks-template)
 
 ## Introductions
 
@@ -94,6 +110,14 @@ use  [nunjucks](https://github.com/mozilla/nunjucks)
 
 ### Example of Creating WeChat Mini Program Code with Templates and Auto registry app.json
 ![newTemplateWithCallback](./resources/docs/newTemplateWithCallback.gif)
+
+## Recommend
+
+- [template-new-cli](https://github.com/shilim-developer/template-new-cli) CLI to new files by nunjucks template
+- [snippets-viewer
+](https://github.com/shilim-developer/snippets-viewer) Snippets Viewer for Visual Studio Code
+
+
 ## ChangeLog
 
 [ChangeLog](./CHANGELOG.md)
